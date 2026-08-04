@@ -19,6 +19,8 @@ import OrderDetail from './pages/OrderDetail';
 
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminReport from './pages/AdminReport';
+import DigitalTwin from './pages/DigitalTwin';
 import ManageFood from './pages/ManageFood';
 import ManageWorkers from './pages/ManageWorkers';
 
@@ -69,6 +71,8 @@ function App() {
           }
         >
           <Route index element={<AdminDashboard />} />
+          <Route path="report" element={<AdminReport />} />
+          <Route path="digital-twin" element={<DigitalTwin />} />
           <Route path="foods" element={<ManageFood />} />
           <Route path="workers" element={<ManageWorkers />} />
         </Route>

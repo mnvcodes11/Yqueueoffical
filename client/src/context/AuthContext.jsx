@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as authService from '../services/authService';
+import { connectSocket, disconnectSocket } from '../services/socketService';
 
 const AuthContext = createContext(null);
 
@@ -17,6 +18,13 @@ export const AuthProvider = ({ children }) => {
         try {
           const res = await authService.getMe();
           setUser(res.user);
+          // Establish the socket connection for this restored session so
+          // pages can subscribe to events without racing the auth flow.
+          try {
+            connectSocket();
+          } catch (e) {
+            // non-fatal: connection issues handled elsewhere
+          }
         } catch (err) {
           localStorage.removeItem('yqueue_token');
           localStorage.removeItem('yqueue_user');
@@ -34,6 +42,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('yqueue_token', res.token);
     localStorage.setItem('yqueue_user', JSON.stringify(res.user));
     setUser(res.user);
+    try {
+      connectSocket();
+    } catch (e) {}
     return res.user;
   };
 
@@ -42,12 +53,19 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('yqueue_token', res.token);
     localStorage.setItem('yqueue_user', JSON.stringify(res.user));
     setUser(res.user);
+    try {
+      connectSocket();
+    } catch (e) {}
     return res.user;
   };
 
   const logout = () => {
     localStorage.removeItem('yqueue_token');
     localStorage.removeItem('yqueue_user');
+    // Close the socket on logout to avoid leaking authenticated sockets.
+    try {
+      disconnectSocket();
+    } catch (e) {}
     setUser(null);
   };
 

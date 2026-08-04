@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { FiAlertTriangle, FiCheckCircle, FiEdit2, FiPackage, FiPlus, FiSearch, FiTrash2, FiTrendingDown, FiX } from 'react-icons/fi';
+import { FiAlertTriangle, FiCheckCircle, FiEdit2, FiPackage, FiPlus, FiSearch, FiTrash2, FiTrendingDown, FiX, FiClock, FiStar, FiHeart } from 'react-icons/fi';
 import * as foodService from '../services/foodService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 
-const CATEGORIES = ['Meals', 'Snacks', 'Drinks', 'Desserts'];
-const EMPTY_FORM = { name: '', description: '', category: 'Meals', price: '', image: '', available: true, stock: '' };
+const CATEGORIES = ['Meals', 'Snacks', 'Drinks', 'Desserts', 'South Indian', 'Chinese', 'Beverages', 'Breakfast'];
+const EMPTY_FORM = { name: '', description: '', category: 'Meals', price: '', image: '', available: true, stock: '', prepTime: '10-15 min', isVeg: true, isSpecial: false, isBestseller: false };
 
 const ManageFood = () => {
   const [foods, setFoods] = useState([]);
@@ -68,6 +68,10 @@ const ManageFood = () => {
       image: food.image,
       available: food.available,
       stock: food.stock === null || food.stock === undefined ? '' : food.stock,
+      prepTime: food.prepTime || '10-15 min',
+      isVeg: food.isVeg !== undefined ? food.isVeg : true,
+      isSpecial: Boolean(food.isSpecial),
+      isBestseller: Boolean(food.isBestseller),
     });
     setEditingId(food._id);
     setShowModal(true);
@@ -153,9 +157,14 @@ const ManageFood = () => {
         </div>
       </div>
 
-      <div className="relative max-w-md">
-        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search food, category, or status..." className="input-field pl-10" />
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="relative max-w-md flex-1">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search food, category, or status..." className="input-field pl-10" />
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
+          Campus-ready menu • vegetarian-first • live inventory
+        </div>
       </div>
 
       <div className="card overflow-hidden">
@@ -188,7 +197,18 @@ const ManageFood = () => {
 
                   return (
                     <tr key={food._id} className="bg-slate-900/40">
-                      <td className="px-4 py-3 font-medium text-white">{food.name}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-white">{food.name}</span>
+                          {food.isVeg !== false && <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">Veg</span>}
+                          {food.isSpecial && <span className="rounded-full bg-primary-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary-200">Special</span>}
+                          {food.isBestseller && <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300">Best</span>}
+                        </div>
+                        <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">
+                          <span className="inline-flex items-center gap-1"><FiClock size={12} /> {food.prepTime || '10-15 min'}</span>
+                          <span className="inline-flex items-center gap-1"><FiHeart size={12} /> {food.isVeg === false ? 'Non-veg' : 'Vegetarian'}</span>
+                        </div>
+                      </td>
                       <td className="px-4 py-3 text-slate-400">{food.category}</td>
                       <td className="px-4 py-3 text-slate-300">₹{food.price}</td>
                       <td className="px-4 py-3 text-slate-300">
@@ -262,16 +282,36 @@ const ManageFood = () => {
                 <label className="mb-1 block text-sm font-medium text-slate-300">Image URL</label>
                 <input name="image" value={form.image} onChange={handleChange} placeholder="https://..." className="input-field" />
               </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-300">
-                  Stock <span className="font-normal text-slate-500">(leave blank = unlimited)</span>
-                </label>
-                <input name="stock" type="number" min="0" step="1" value={form.stock} onChange={handleChange} placeholder="Unlimited" className="input-field" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-300">Prep time</label>
+                  <input name="prepTime" value={form.prepTime} onChange={handleChange} placeholder="10-15 min" className="input-field" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-300">
+                    Stock <span className="font-normal text-slate-500">(blank = unlimited)</span>
+                  </label>
+                  <input name="stock" type="number" min="0" step="1" value={form.stock} onChange={handleChange} placeholder="Unlimited" className="input-field" />
+                </div>
               </div>
-              <label className="flex items-center gap-2 text-sm text-slate-300">
-                <input type="checkbox" name="available" checked={form.available} onChange={handleChange} />
-                Available for ordering
-              </label>
+              <div className="grid gap-2 text-sm text-slate-300">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" name="available" checked={form.available} onChange={handleChange} />
+                  Available for ordering
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" name="isVeg" checked={form.isVeg} onChange={handleChange} />
+                  Vegetarian item
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" name="isSpecial" checked={form.isSpecial} onChange={handleChange} />
+                  Today’s special
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" name="isBestseller" checked={form.isBestseller} onChange={handleChange} />
+                  Bestseller
+                </label>
+              </div>
               <button type="submit" disabled={saving} className="btn-primary mt-2 w-full">
                 {saving ? 'Saving...' : editingId ? 'Update Menu Item' : 'Create Menu Item'}
               </button>

@@ -1,11 +1,13 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { FiGrid, FiCoffee, FiUserCheck } from 'react-icons/fi';
+import { FiCoffee, FiCpu, FiFileText, FiGrid, FiUserCheck } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 
 const links = [
   { to: '/admin/dashboard', label: 'Overview', icon: FiGrid },
+  { to: '/admin/dashboard/report', label: 'BI Reports', icon: FiFileText },
+  { to: '/admin/dashboard/digital-twin', label: 'Digital Twin', icon: FiCpu },
   { to: '/admin/dashboard/foods', label: 'Manage Food', icon: FiCoffee },
   { to: '/admin/dashboard/workers', label: 'Counter Staff', icon: FiUserCheck },
 ];

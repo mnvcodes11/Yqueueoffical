@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { FiArchive, FiArrowRight, FiCheckCircle, FiClock, FiZap } from 'react-icons/fi';
 import * as orderService from '../services/orderService';
@@ -70,12 +71,12 @@ const WorkerDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/90 to-primary-950/70 p-6 sm:p-8">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/90 to-primary-950/70 p-6 shadow-[0_30px_80px_rgba(2,8,23,0.35)] sm:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Kitchen Operations</p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">Live queue management</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400">Advance paid orders through preparation and hand them to students once the QR pickup is verified.</p>
+            <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Kitchen operations</p>
+            <h1 className="mt-2 text-3xl font-semibold text-white">Live queue orchestration</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400">Advance paid orders through preparation and hand them off when the QR pickup is verified.</p>
           </div>
           <div className="flex flex-wrap gap-3 text-sm text-slate-300">
             <div className="rounded-2xl border border-white/10 bg-white/10 px-3 py-2"><span className="font-semibold text-white">{orders.length}</span> active</div>
@@ -85,7 +86,7 @@ const WorkerDashboard = () => {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {COLUMNS.map((col) => {
@@ -94,7 +95,7 @@ const WorkerDashboard = () => {
             .sort((a, b) => (a.queueNumber || 0) - (b.queueNumber || 0));
 
           return (
-            <div key={col.status} className="card p-4">
+            <motion.div key={col.status} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-4 backdrop-blur">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="font-semibold text-white">{col.title}</h2>
                 <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-slate-400">{columnOrders.length}</span>
@@ -141,12 +142,12 @@ const WorkerDashboard = () => {
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           );
         })}
       </div>
 
-      <div className="rounded-[2rem] border border-white/10 bg-slate-900/60 p-6">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-[2rem] border border-white/10 bg-slate-900/60 p-6">
         <div className="flex items-center gap-2 font-semibold text-white">
           <FiArchive size={16} /> Recently Collected
         </div>
@@ -167,7 +168,7 @@ const WorkerDashboard = () => {
             ))}
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

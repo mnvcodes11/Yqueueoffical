@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const Food = require('../models/Food');
 const asyncHandler = require('../utils/asyncHandler');
+const { normalizeFoodPayload } = require('../utils/foodUtils');
 
 // @desc    Get all foods (supports search, category filter, availability filter)
 // @route   GET /api/foods?search=&category=&available=
@@ -52,17 +53,9 @@ const createFood = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
   }
 
-  const { name, description, category, price, image, available, stock } = req.body;
+  const normalizedPayload = normalizeFoodPayload(req.body);
 
-  const food = await Food.create({
-    name,
-    description,
-    category,
-    price,
-    image,
-    available,
-    stock: stock === '' || stock === undefined ? null : Number(stock),
-  });
+  const food = await Food.create(normalizedPayload);
 
   res.status(201).json({ success: true, message: 'Food item created successfully', food });
 });
@@ -81,14 +74,12 @@ const updateFood = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'Food item not found' });
   }
 
-  const allowedFields = ['name', 'description', 'category', 'price', 'image', 'available', 'stock'];
+  const allowedFields = ['name', 'description', 'category', 'price', 'image', 'available', 'stock', 'prepTime', 'isVeg', 'isSpecial', 'isBestseller'];
+  const normalizedPayload = normalizeFoodPayload(req.body);
+
   allowedFields.forEach((field) => {
-    if (req.body[field] !== undefined) {
-      if (field === 'stock') {
-        food.stock = req.body.stock === '' || req.body.stock === null ? null : Number(req.body.stock);
-      } else {
-        food[field] = req.body[field];
-      }
+    if (normalizedPayload[field] !== undefined) {
+      food[field] = normalizedPayload[field];
     }
   });
 

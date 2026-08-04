@@ -8,7 +8,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import AnimatedSection from '../components/AnimatedSection';
 
-const CATEGORIES = ['All', 'Meals', 'Snacks', 'Drinks', 'Desserts'];
+const CATEGORIES = ['All', 'Meals', 'Snacks', 'Drinks', 'Desserts', 'South Indian', 'Chinese', 'Beverages', 'Breakfast'];
 
 const Menu = () => {
   const [foods, setFoods] = useState([]);

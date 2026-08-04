@@ -13,7 +13,7 @@ const loginValidation = [
 
 const foodValidation = [
   body('name').trim().notEmpty().withMessage('Food name is required'),
-  body('category').isIn(['Meals', 'Snacks', 'Drinks', 'Desserts']).withMessage('Invalid category'),
+  body('category').isIn(['Meals', 'Snacks', 'Drinks', 'Desserts', 'South Indian', 'Chinese', 'Beverages', 'Breakfast']).withMessage('Invalid category'),
   body('price').isFloat({ min: 0 }).withMessage('Price must be a positive number'),
 ];
 

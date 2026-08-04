@@ -46,7 +46,22 @@ const getIo = () => {
 // Notify the student who owns the order (their dashboard/order tracking page).
 const emitOrderUpdateToStudent = (studentId, order) => {
   if (!io) return;
-  io.to(`student:${studentId}`).emit('order:update', order);
+  if (!studentId) return;
+
+  let sid = studentId;
+  // If a populated student object was passed, extract the identifier.
+  if (typeof studentId === 'object') {
+    if (studentId._id) sid = studentId._id;
+    else if (studentId.id) sid = studentId.id;
+  }
+
+  try {
+    sid = sid.toString();
+  } catch (e) {
+    return;
+  }
+
+  io.to(`student:${sid}`).emit('order:update', order);
 };
 
 // Notify kitchen/worker/admin views that the live order queue changed.
@@ -56,3 +71,9 @@ const emitOrderUpdateToStaff = (order) => {
 };
 
 module.exports = { initSocket, getIo, emitOrderUpdateToStudent, emitOrderUpdateToStaff };
+
+// Test helper: allow setting `io` in unit tests without starting a real server.
+// Not used in production; included to facilitate automated checks.
+module.exports.__setIoForTests = (testIo) => {
+  io = testIo;
+};

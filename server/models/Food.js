@@ -17,7 +17,7 @@ const foodSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, 'Category is required'],
-      enum: ['Meals', 'Snacks', 'Drinks', 'Desserts'],
+      enum: ['Meals', 'Snacks', 'Drinks', 'Desserts', 'South Indian', 'Chinese', 'Beverages', 'Breakfast'],
     },
     price: {
       type: Number,
@@ -31,6 +31,23 @@ const foodSchema = new mongoose.Schema(
     available: {
       type: Boolean,
       default: true,
+    },
+    prepTime: {
+      type: String,
+      trim: true,
+      default: '10-15 min',
+    },
+    isVeg: {
+      type: Boolean,
+      default: true,
+    },
+    isSpecial: {
+      type: Boolean,
+      default: false,
+    },
+    isBestseller: {
+      type: Boolean,
+      default: false,
     },
     // Optional tracked stock count. null/undefined = unlimited (only `available`
     // gates orderability, matching Phase 1 behavior). When set to a number,
