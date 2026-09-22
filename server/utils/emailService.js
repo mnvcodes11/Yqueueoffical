@@ -20,7 +20,7 @@ const getTransporter = async () => {
     }), isTestTransport };
   }
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production' || process.env.EMAIL_ALLOW_TEST_TRANSPORT !== 'true') {
     throw new Error('SMTP configuration is required in production');
   }
 
@@ -134,18 +134,15 @@ const buildResetConfirmationHtml = ({ name }) => {
 };
 
 const sendEmail = async ({ to, subject, html }) => {
-  const { transporter, isTestTransport } = await getTransporter();
+  const { transporter } = await getTransporter();
   const info = await transporter.sendMail({
-    from: process.env.EMAIL_FROM || 'YQueue <no-reply@yqueue.app>',
+    from: process.env.SMTP_FROM || process.env.EMAIL_FROM || 'YQueue <no-reply@yqueue.app>',
     to,
     subject,
     html,
   });
 
-  if (isTestTransport) {
-    const previewUrl = nodemailer.getTestMessageUrl(info);
-    console.log('YQueue test email preview URL:', previewUrl);
-  }
+  return info;
 };
 
 const sendOtpEmail = async (user, otp) => {

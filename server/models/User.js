@@ -46,6 +46,19 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    otpLastSentAt: {
+      type: Date,
+      select: false,
+    },
+    otpRequestCount: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
+    otpRequestWindowStart: {
+      type: Date,
+      select: false,
+    },
     resetSessionHash: {
       type: String,
       select: false,

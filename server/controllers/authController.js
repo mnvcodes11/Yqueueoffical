@@ -45,7 +45,7 @@ const login = asyncHandler(async (req, res) => {
   // If the frontend specifies which portal it's logging in from, enforce it,
   // so a student cannot log into the admin dashboard and vice versa.
   if (role && user.role !== role) {
-    return res.status(403).json({ success: false, message: `No ${role} account found with this email` });
+    return res.status(401).json({ success: false, message: 'Invalid email or password' });
   }
 
   const isMatch = await user.comparePassword(password);

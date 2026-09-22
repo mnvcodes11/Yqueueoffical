@@ -1,6 +1,11 @@
 const dotenv = require('dotenv');
 const dotenvOptions = { override: process.env.NODE_ENV !== 'production' };
 dotenv.config(dotenvOptions);
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret || jwtSecret.length < 32 || jwtSecret === 'replace_with_a_long_random_secret') {
+  throw new Error('JWT_SECRET must be configured with at least 32 random characters');
+}
+
 const express = require('express');
 const http = require('http');
 const cors = require('cors');

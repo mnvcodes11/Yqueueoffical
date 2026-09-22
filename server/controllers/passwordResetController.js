@@ -1,34 +1,41 @@
-const crypto = require('crypto');
-const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendOtpEmail, sendPasswordResetSuccessEmail } = require('../utils/emailService');
 const { logPasswordEvent } = require('../utils/auditLogger');
+const { hashValue, hashesMatch, generateOtp, generateResetToken } = require('../utils/passwordResetCrypto');
 
 const OTP_LENGTH = 6;
-const OTP_TTL_MS = 10 * 60 * 1000;
-const MAX_OTP_ATTEMPTS = 5;
-const RESET_SESSION_TTL_MS = 15 * 60 * 1000;
+const OTP_TTL_MS = Number(process.env.OTP_TTL_MINUTES || 10) * 60 * 1000;
+const MAX_OTP_ATTEMPTS = Number(process.env.OTP_MAX_ATTEMPTS || 5);
+const OTP_RESEND_COOLDOWN_MS = Number(process.env.OTP_RESEND_COOLDOWN_SECONDS || 60) * 1000;
+const OTP_REQUEST_WINDOW_MS = Number(process.env.OTP_REQUEST_WINDOW_MINUTES || 15) * 60 * 1000;
+const MAX_OTP_REQUESTS_PER_WINDOW = Number(process.env.OTP_MAX_REQUESTS_PER_WINDOW || 3);
+const RESET_SESSION_TTL_MS = Number(process.env.RESET_SESSION_TTL_MINUTES || 15) * 60 * 1000;
 
 const safeResponse = (res) =>
   res.status(200).json({ success: true, message: 'If an account exists, an OTP has been sent.' });
 
-const hashValue = (value) => {
-  return crypto.createHash('sha256').update(value).digest('hex');
-};
-
-const generateOtp = () => {
-  const otp = crypto.randomInt(0, 999999).toString().padStart(OTP_LENGTH, '0');
-  return otp;
-};
-
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
   const normalizedEmail = String(email).trim().toLowerCase();
-  const user = await User.findOne({ email: normalizedEmail });
+  const user = await User.findOne({ email: normalizedEmail }).select(
+    '+otpLastSentAt +otpRequestCount +otpRequestWindowStart'
+  );
 
   if (!user) {
     await logPasswordEvent({ email: normalizedEmail, event: 'forgot_password_request', ip: req.ip });
+    return safeResponse(res);
+  }
+
+  const now = Date.now();
+  const lastSentAt = user.otpLastSentAt ? new Date(user.otpLastSentAt).getTime() : 0;
+  if (lastSentAt && now - lastSentAt < OTP_RESEND_COOLDOWN_MS) {
+    return safeResponse(res);
+  }
+
+  const windowStart = user.otpRequestWindowStart ? new Date(user.otpRequestWindowStart).getTime() : 0;
+  const requestCount = windowStart && now - windowStart < OTP_REQUEST_WINDOW_MS ? user.otpRequestCount : 0;
+  if (requestCount >= MAX_OTP_REQUESTS_PER_WINDOW) {
     return safeResponse(res);
   }
 
@@ -40,6 +47,9 @@ const forgotPassword = asyncHandler(async (req, res) => {
   user.otpExpiry = expiry;
   user.otpAttempts = 0;
   user.otpCreatedAt = new Date();
+  user.otpLastSentAt = new Date(now);
+  user.otpRequestWindowStart = requestCount ? new Date(windowStart) : new Date(now);
+  user.otpRequestCount = requestCount + 1;
   user.resetSessionHash = undefined;
   user.resetSessionExpiry = undefined;
   await user.save({ validateBeforeSave: false });
@@ -48,6 +58,11 @@ const forgotPassword = asyncHandler(async (req, res) => {
     await sendOtpEmail(user, otp);
     await logPasswordEvent({ userId: user._id, email: normalizedEmail, event: 'otp_generated', ip: req.ip });
   } catch (error) {
+    user.otpHash = undefined;
+    user.otpExpiry = undefined;
+    user.otpAttempts = 0;
+    user.otpCreatedAt = undefined;
+    await user.save({ validateBeforeSave: false });
     await logPasswordEvent({ userId: user._id, email: normalizedEmail, event: 'otp_email_failed', ip: req.ip });
   }
 
@@ -65,6 +80,11 @@ const verifyOtp = asyncHandler(async (req, res) => {
   }
 
   if (user.otpAttempts >= MAX_OTP_ATTEMPTS) {
+    user.otpHash = undefined;
+    user.otpExpiry = undefined;
+    user.otpAttempts = 0;
+    user.otpCreatedAt = undefined;
+    await user.save({ validateBeforeSave: false });
     await logPasswordEvent({ userId: user._id, email: normalizedEmail, event: 'too_many_otp_attempts', ip: req.ip });
     return res.status(429).json({ success: false, message: 'Too many attempts. Please request a new code.' });
   }
@@ -80,14 +100,23 @@ const verifyOtp = asyncHandler(async (req, res) => {
   }
 
   const submittedHash = hashValue(String(otp).trim());
-  if (!crypto.timingSafeEqual(Buffer.from(submittedHash), Buffer.from(user.otpHash))) {
+  if (!hashesMatch(submittedHash, user.otpHash)) {
     user.otpAttempts += 1;
+    if (user.otpAttempts >= MAX_OTP_ATTEMPTS) {
+      user.otpHash = undefined;
+      user.otpExpiry = undefined;
+      user.otpAttempts = 0;
+      user.otpCreatedAt = undefined;
+    }
     await user.save({ validateBeforeSave: false });
     await logPasswordEvent({ userId: user._id, email: normalizedEmail, event: 'otp_failed', ip: req.ip });
-    return res.status(400).json({ success: false, message: 'Invalid code or code expired' });
+    return res.status(user.otpHash ? 400 : 429).json({
+      success: false,
+      message: user.otpHash ? 'Invalid code or code expired' : 'Too many attempts. Please request a new code.',
+    });
   }
 
-  const sessionValue = crypto.randomBytes(32).toString('hex');
+  const sessionValue = generateResetToken();
   const sessionHash = hashValue(sessionValue);
   const sessionExpiry = new Date(Date.now() + RESET_SESSION_TTL_MS);
 
@@ -123,7 +152,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   }
 
   const submittedHash = hashValue(String(resetToken).trim());
-  if (!crypto.timingSafeEqual(Buffer.from(submittedHash), Buffer.from(user.resetSessionHash))) {
+  if (!hashesMatch(submittedHash, user.resetSessionHash)) {
     await logPasswordEvent({ userId: user._id, email: normalizedEmail, event: 'reset_failed', ip: req.ip });
     return res.status(400).json({ success: false, message: 'Invalid or expired reset session' });
   }
@@ -133,7 +162,11 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.resetSessionExpiry = undefined;
   await user.save();
 
-  await sendPasswordResetSuccessEmail(user);
+  try {
+    await sendPasswordResetSuccessEmail(user);
+  } catch (error) {
+    await logPasswordEvent({ userId: user._id, email: normalizedEmail, event: 'reset_confirmation_email_failed', ip: req.ip });
+  }
   await logPasswordEvent({ userId: user._id, email: normalizedEmail, event: 'password_changed', ip: req.ip });
 
   res.status(200).json({ success: true, message: 'Password reset complete. Please log in with your new password.' });
