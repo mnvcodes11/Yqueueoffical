@@ -1,5 +1,23 @@
 const nodemailer = require('nodemailer');
 
+const safeSmtpErrorDetails = (error) => {
+  const configuredSecrets = [process.env.SMTP_PASS, process.env.JWT_SECRET].filter(Boolean);
+  const redact = (value) => configuredSecrets.reduce(
+    (result, secret) => result.split(secret).join('[REDACTED]'),
+    String(value || '')
+  );
+  const command = String(error?.command || '');
+  const safeCommand = /^(EHLO|HELO|MAIL|RCPT|DATA|QUIT|STARTTLS|AUTH)$/i.test(command) ? command : undefined;
+
+  return {
+    name: error?.name || 'Error',
+    code: error?.code || 'UNKNOWN',
+    responseCode: error?.responseCode || undefined,
+    command: safeCommand,
+    message: redact(error?.message || 'SMTP operation failed'),
+  };
+};
+
 const getTransporter = async () => {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 587);
@@ -21,7 +39,9 @@ const getTransporter = async () => {
   }
 
   if (process.env.NODE_ENV === 'production' || process.env.EMAIL_ALLOW_TEST_TRANSPORT !== 'true') {
-    throw new Error('SMTP configuration is required in production');
+    const error = new Error('SMTP configuration is required');
+    error.code = 'SMTP_CONFIG_MISSING';
+    throw error;
   }
 
   const testAccount = await nodemailer.createTestAccount();
@@ -163,4 +183,4 @@ const sendPasswordResetSuccessEmail = async (user) => {
   });
 };
 
-module.exports = { sendOtpEmail, sendPasswordResetSuccessEmail };
+module.exports = { sendOtpEmail, sendPasswordResetSuccessEmail, safeSmtpErrorDetails };
