@@ -6,19 +6,21 @@ const {
   updateFood,
   deleteFood,
 } = require('../controllers/foodController');
-const { foodValidation } = require('../utils/validators');
+const { foodValidation, foodUpdateValidation, foodIdParamValidation, foodQueryValidation } = require('../utils/validators');
 const { protect } = require('../middleware/auth');
 const { authorize } = require('../middleware/role');
+const { publicLimiter } = require('../middleware/rateLimiter');
+const validateRequest = require('../middleware/validateRequest');
 
 const router = express.Router();
 
 // Public - anyone (logged in student or not) can browse the menu
-router.get('/', getFoods);
-router.get('/:id', getFoodById);
+router.get('/', publicLimiter, foodQueryValidation, validateRequest, getFoods);
+router.get('/:id', publicLimiter, foodIdParamValidation, validateRequest, getFoodById);
 
 // Admin only
-router.post('/', protect, authorize('admin'), foodValidation, createFood);
-router.put('/:id', protect, authorize('admin'), updateFood);
-router.delete('/:id', protect, authorize('admin'), deleteFood);
+router.post('/', protect, authorize('admin'), foodValidation, validateRequest, createFood);
+router.put('/:id', protect, authorize('admin'), foodIdParamValidation, foodUpdateValidation, validateRequest, updateFood);
+router.delete('/:id', protect, authorize('admin'), foodIdParamValidation, validateRequest, deleteFood);
 
 module.exports = router;

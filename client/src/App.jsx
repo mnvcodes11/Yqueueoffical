@@ -6,6 +6,10 @@ import LandingPage from './pages/LandingPage';
 import StudentLogin from './pages/StudentLogin';
 import StudentSignup from './pages/StudentSignup';
 import AdminLogin from './pages/AdminLogin';
+import ForgotPassword from './pages/ForgotPassword';
+import VerifyOtp from './pages/VerifyOtp';
+import ResetPassword from './pages/ResetPassword';
+import PasswordResetSuccess from './pages/PasswordResetSuccess';
 import NotFound from './pages/NotFound';
 
 import StudentLayout from './layouts/StudentLayout';
@@ -40,6 +44,10 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<StudentLogin />} />
         <Route path="/signup" element={<StudentSignup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/reset-success" element={<PasswordResetSuccess />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/worker/login" element={<WorkerLogin />} />
 

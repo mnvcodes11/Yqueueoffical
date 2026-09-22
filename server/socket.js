@@ -3,10 +3,34 @@ const jwt = require('jsonwebtoken');
 
 let io = null;
 
+const normalizeOrigins = (origins) => {
+  const normalized = new Set();
+  origins.forEach((origin) => {
+    const trimmed = String(origin).trim();
+    if (!trimmed) return;
+    try {
+      const url = new URL(trimmed);
+      normalized.add(url.origin);
+      if (url.hostname === 'localhost') {
+        url.hostname = '127.0.0.1';
+        normalized.add(url.origin);
+      }
+    } catch (err) {
+      normalized.add(trimmed);
+    }
+  });
+  return Array.from(normalized);
+};
+
 const initSocket = (httpServer) => {
+  const allowedOrigins = normalizeOrigins(
+    process.env.CLIENT_URL
+      ? process.env.CLIENT_URL.split(',')
+      : ['http://localhost:5173', 'http://127.0.0.1:5173', 'https://yqueue.vercel.app']
+  );
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:5173',
+      origin: allowedOrigins,
       credentials: true,
     },
   });
@@ -20,6 +44,9 @@ const initSocket = (httpServer) => {
       const token = socket.handshake.auth?.token;
       if (!token) return next(new Error('Not authorized'));
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (!decoded?.id || !decoded?.role) {
+        return next(new Error('Not authorized'));
+      }
       socket.userId = decoded.id;
       socket.role = decoded.role;
       next();

@@ -43,6 +43,10 @@ const verifyQr = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'Order not found' });
   }
 
+  if (order.student.toString() !== decoded.studentId) {
+    return res.status(403).json({ success: false, message: 'QR token does not match this order' });
+  }
+
   const expiresAt = decoded.expiresAt ? new Date(decoded.expiresAt) : null;
   const isExpired = expiresAt ? new Date() > expiresAt : false;
 
@@ -69,10 +73,11 @@ const verifyQr = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'QR code is invalid' });
   }
 
-  // Atomic guard: flips qrUsed only if it is still false, so two near-
-  // simultaneous scans of the same QR can never both succeed.
+  // Atomic guard: flip qrUsed only if the order is still ready and unused.
+  // This prevents a stale scan from collecting an order that was already
+  // claimed or that changed state after token validation.
   const claimed = await Order.findOneAndUpdate(
-    { _id: order._id, qrUsed: false },
+    { _id: order._id, qrUsed: false, status: 'ready' },
     {
       $set: {
         qrUsed: true,

@@ -1,6 +1,10 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+const defaultSocketUrl = import.meta.env.DEV
+  ? 'http://localhost:5000'
+  : 'https://yqueue.onrender.com';
+
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || defaultSocketUrl;
 
 let socket = null;
 

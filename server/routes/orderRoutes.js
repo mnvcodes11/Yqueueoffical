@@ -9,16 +9,18 @@ const {
   getStaffOrders,
   updateOrderStatus,
 } = require('../controllers/orderController');
+const { orderStatusValidation, kitchenOrderStatusValidation, staffOrderStatusValidation, orderIdParamValidation, orderCheckoutValidation } = require('../utils/validators');
+const validateRequest = require('../middleware/validateRequest');
 
 const router = express.Router();
 
 router.use(protect);
 
-router.post('/checkout', authorize('student'), checkout);
+router.post('/checkout', authorize('student'), orderCheckoutValidation, validateRequest, checkout);
 router.get('/my', authorize('student'), getMyOrders);
-router.get('/kitchen', authorize('worker', 'admin'), getKitchenOrders);
-router.get('/staff', authorize('worker', 'admin'), getStaffOrders);
-router.patch('/:id/status', authorize('worker', 'admin'), updateOrderStatus);
-router.get('/:id', getOrderById); // ownership/staff check happens inside the controller
+router.get('/kitchen', authorize('worker', 'admin'), kitchenOrderStatusValidation, validateRequest, getKitchenOrders);
+router.get('/staff', authorize('worker', 'admin'), staffOrderStatusValidation, validateRequest, getStaffOrders);
+router.patch('/:id/status', authorize('worker', 'admin'), orderStatusValidation, validateRequest, updateOrderStatus);
+router.get('/:id', orderIdParamValidation, validateRequest, getOrderById); // ownership/staff check happens inside the controller
 
 module.exports = router;

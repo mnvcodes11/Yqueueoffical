@@ -43,6 +43,11 @@ const WorkerLogin = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input name="password" type="password" value={form.password} onChange={handleChange} required className="input-field" placeholder="••••••••" />
             </div>
+            <div className="text-right text-sm">
+              <Link to="/forgot-password" className="text-primary-600 font-medium hover:text-primary-500">
+                Forgot password?
+              </Link>
+            </div>
             <button type="submit" disabled={loading} className="btn-primary w-full">
               {loading ? 'Logging in...' : 'Log In'}
             </button>

@@ -1,9 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FiClock, FiShield, FiSmartphone, FiBarChart2, FiArrowRight, FiStar, FiChevronRight, FiCheckCircle, FiZap, FiLayers, FiTrendingUp } from 'react-icons/fi';
-import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
-import AnimatedSection from '../components/AnimatedSection';
 
 const features = [
   { icon: FiClock, title: 'Queue-Free Ordering', desc: 'Pre-order from anywhere and collect when your meal is ready.' },
@@ -52,58 +50,28 @@ const LandingPage = () => {
           </div>
 
           <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-            <AnimatedSection className="max-w-2xl">
-              <motion.div
-                initial={{ opacity: 0, x: -24 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary-400/30 bg-primary-500/10 px-3 py-1 text-sm font-medium text-primary-200"
-              >
+            <div className="max-w-2xl">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary-400/30 bg-primary-500/10 px-3 py-1 text-sm font-medium text-primary-200">
                 <FiStar size={14} /> Premium campus pickup experience
-              </motion.div>
-              <motion.h1
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-                className="text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl"
-              >
+              </div>
+              <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
                 The fastest way to turn campus hunger into a premium experience.
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-                className="mt-5 text-lg leading-8 text-slate-300"
-              >
+              </h1>
+              <p className="mt-5 text-lg leading-8 text-slate-300">
                 YQueue brings the speed of modern food tech to university canteens with live queue updates, secure payment verification, and a pickup flow that feels built for scale.
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                className="mt-8 flex flex-col gap-3 sm:flex-row"
-              >
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link to="/signup" className="btn-primary px-6 py-3 text-base">Get Started as Student</Link>
                 <Link to="/worker/login" className="btn-secondary px-6 py-3 text-base">Worker Portal</Link>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
-                className="mt-6 flex flex-wrap items-center gap-3 text-sm text-slate-400"
-              >
+              </div>
+              <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-slate-400">
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-2"><FiCheckCircle size={14} /> Zero-friction ordering</span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-2"><FiCheckCircle size={14} /> Live queue intelligence</span>
-              </motion.div>
-            </AnimatedSection>
+              </div>
+            </div>
 
-            <AnimatedSection delay={0.1} className="card p-6 sm:p-8">
-              <motion.div
-                initial={{ opacity: 0, y: 22, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="hero-sheen rounded-[2rem] border border-white/10 bg-gradient-to-br from-primary-600/20 via-slate-900/80 to-cyan-500/20 p-6"
-              >
+            <div className="card p-6 sm:p-8">
+              <div className="hero-sheen rounded-[2rem] border border-white/10 bg-gradient-to-br from-primary-600/20 via-slate-900/80 to-cyan-500/20 p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-300">Live order flow</p>
@@ -123,8 +91,8 @@ const LandingPage = () => {
                   <span>Pickup confidence</span>
                   <span className="font-semibold text-primary-200">98% instant handoff</span>
                 </div>
-              </motion.div>
-            </AnimatedSection>
+              </div>
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
@@ -137,7 +105,9 @@ const LandingPage = () => {
           </div>
         </section>
 
-        <AnimatedSection className="border-t border-white/10 bg-slate-900/60">
+        {/* TeamSection moved lower on the page (will render just above footer) */}
+
+        <section className="border-t border-white/10 bg-slate-900/60">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <div className="mb-10 flex items-end justify-between gap-4">
               <div>
@@ -157,9 +127,9 @@ const LandingPage = () => {
               ))}
             </div>
           </div>
-        </AnimatedSection>
+        </section>
 
-        <AnimatedSection className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-br from-primary-950/70 via-slate-900 to-cyan-950/70 p-8 lg:p-10">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12),transparent_38%)]" />
             <div className="relative grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
@@ -181,9 +151,9 @@ const LandingPage = () => {
               </div>
             </div>
           </div>
-        </AnimatedSection>
+        </section>
 
-        <AnimatedSection className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="grid gap-6 rounded-[2rem] border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/90 to-primary-950/70 p-8 lg:grid-cols-[0.9fr_1.1fr] lg:p-10">
             <div>
               <p className="text-sm uppercase tracking-[0.35em] text-slate-400">How it works</p>
@@ -199,9 +169,9 @@ const LandingPage = () => {
               ))}
             </div>
           </div>
-        </AnimatedSection>
+        </section>
 
-        <AnimatedSection className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
           <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="card p-8">
               <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Loved by teams</p>
@@ -230,10 +200,10 @@ const LandingPage = () => {
               </div>
             </div>
           </div>
-        </AnimatedSection>
+        </section>
       </main>
 
-      <AnimatedSection className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
         <div className="relative overflow-hidden rounded-[2.5rem] border border-primary-400/20 bg-gradient-to-r from-primary-600/25 via-slate-900/90 to-cyan-500/25 p-8 lg:p-10">
           <div className="absolute -right-8 top-0 h-40 w-40 rounded-full bg-cyan-400/20 blur-3xl" />
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -245,7 +215,7 @@ const LandingPage = () => {
             <Link to="/signup" className="btn-primary px-6 py-3 text-base">Launch YQueue</Link>
           </div>
         </div>
-      </AnimatedSection>
+      </section>
 
       <footer className="border-t border-white/10 py-8 text-center text-sm text-slate-500">
         &copy; {new Date().getFullYear()} YQueue. Designed for premium campus experiences.

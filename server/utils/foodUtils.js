@@ -1,3 +1,5 @@
+const escapeRegex = (value = '') => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const normalizeFoodPayload = (input = {}) => {
   const normalized = {
     name: String(input.name || '').trim(),
@@ -20,4 +22,4 @@ const normalizeFoodPayload = (input = {}) => {
   return normalized;
 };
 
-module.exports = { normalizeFoodPayload };
+module.exports = { normalizeFoodPayload, escapeRegex };

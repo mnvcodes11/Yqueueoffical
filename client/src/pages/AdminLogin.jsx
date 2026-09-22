@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
@@ -42,6 +42,11 @@ const AdminLogin = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input name="password" type="password" value={form.password} onChange={handleChange} required className="input-field" placeholder="••••••••" />
+            </div>
+            <div className="text-right text-sm">
+              <Link to="/forgot-password" className="text-primary-600 font-medium hover:text-primary-500">
+                Forgot password?
+              </Link>
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full">
               {loading ? 'Logging in...' : 'Log In'}

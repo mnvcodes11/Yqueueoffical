@@ -1,7 +1,6 @@
-const { validationResult } = require('express-validator');
 const Food = require('../models/Food');
 const asyncHandler = require('../utils/asyncHandler');
-const { normalizeFoodPayload } = require('../utils/foodUtils');
+const { normalizeFoodPayload, escapeRegex } = require('../utils/foodUtils');
 
 // @desc    Get all foods (supports search, category filter, availability filter)
 // @route   GET /api/foods?search=&category=&available=
@@ -12,9 +11,10 @@ const getFoods = asyncHandler(async (req, res) => {
   const query = {};
 
   if (search) {
+    const safeSearch = escapeRegex(search);
     query.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } },
+      { name: { $regex: safeSearch, $options: 'i' } },
+      { description: { $regex: safeSearch, $options: 'i' } },
     ];
   }
 
@@ -48,11 +48,6 @@ const getFoodById = asyncHandler(async (req, res) => {
 // @route   POST /api/foods
 // @access  Private/Admin
 const createFood = asyncHandler(async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
-  }
-
   const normalizedPayload = normalizeFoodPayload(req.body);
 
   const food = await Food.create(normalizedPayload);
@@ -64,11 +59,6 @@ const createFood = asyncHandler(async (req, res) => {
 // @route   PUT /api/foods/:id
 // @access  Private/Admin
 const updateFood = asyncHandler(async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
-  }
-
   const food = await Food.findById(req.params.id);
   if (!food) {
     return res.status(404).json({ success: false, message: 'Food item not found' });

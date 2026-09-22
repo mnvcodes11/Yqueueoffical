@@ -15,6 +15,21 @@ export const getMe = async () => {
   return res.data;
 };
 
+export const forgotPassword = async (data) => {
+  const res = await api.post('/auth/forgot-password', data);
+  return res.data;
+};
+
+export const verifyOtp = async (data) => {
+  const res = await api.post('/auth/verify-otp', data);
+  return res.data;
+};
+
+export const resetPassword = async (data) => {
+  const res = await api.post('/auth/reset-password', data);
+  return res.data;
+};
+
 export const createWorker = async (data) => {
   const res = await api.post('/auth/create-worker', data);
   return res.data;

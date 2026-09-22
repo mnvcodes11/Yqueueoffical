@@ -19,20 +19,6 @@ const formatMoney = (value) => new Intl.NumberFormat('en-IN', { style: 'currency
 const formatNumber = (value) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(value || 0);
 const safeArray = (value) => (Array.isArray(value) ? value : []);
 const safeObject = (value) => (value && typeof value === 'object' ? value : {});
-const renderReportValue = (value) => {
-  if (typeof value === 'number') return formatNumber(value);
-  if (typeof value === 'string') return value;
-  if (Array.isArray(value)) {
-    return value.map((item) => {
-      if (item && typeof item === 'object') {
-        return item.name ? `${item.name}: ${item.forecast ?? ''}` : JSON.stringify(item);
-      }
-      return String(item);
-    }).join(', ');
-  }
-  if (value && typeof value === 'object') return JSON.stringify(value);
-  return 'N/A';
-};
 
 const normalizeReport = (input) => {
   const payload = input?.report || input || {};
@@ -335,7 +321,7 @@ const AdminReport = () => {
             {Object.entries(normalizedReport.aiPredictions).filter(([key]) => key !== 'tomorrowFoodDemand').map(([key, value]) => (
               <div key={key} className="rounded-3xl border border-white/10 bg-slate-900/80 p-4">
                 <p className="text-sm capitalize text-slate-400">{key.replace(/([A-Z])/g, ' $1')}</p>
-                <p className="mt-2 text-lg font-semibold text-white">{renderReportValue(value)}</p>
+                <p className="mt-2 text-lg font-semibold text-white">{typeof value === 'number' ? formatNumber(value) : value}</p>
               </div>
             ))}
           </div>

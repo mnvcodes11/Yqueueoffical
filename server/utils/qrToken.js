@@ -1,8 +1,11 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
-const QR_SECRET = process.env.QR_SECRET || process.env.JWT_SECRET;
-const QR_EXPIRES_IN = process.env.QR_EXPIRES_IN || '6h';
+const QR_SECRET = process.env.QR_SECRET;
+if (!QR_SECRET) {
+  throw new Error('QR_SECRET must be configured to generate secure pickup tokens');
+}
+const QR_EXPIRES_IN = process.env.QR_EXPIRES_IN || '15m';
 
 const signQrToken = (order, student, issuedAt = new Date()) => {
   const expiresAt = new Date(issuedAt.getTime() + 1000 * 60 * 15);

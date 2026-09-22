@@ -86,9 +86,11 @@ const verifyPayment = asyncHandler(async (req, res) => {
   if (order.payment.razorpayOrderId !== razorpay_order_id) {
     return res.status(400).json({ success: false, message: 'Razorpay order mismatch' });
   }
-  if (order.payment.status === 'paid' || order.status !== 'pending_payment') {
-    // Already processed (or expired) - return current state idempotently.
-    return res.status(200).json({ success: true, message: 'Order already processed', order });
+  if (order.payment.status === 'paid') {
+    return res.status(200).json({ success: true, message: 'Order already paid', order });
+  }
+  if (order.status !== 'pending_payment') {
+    return res.status(400).json({ success: false, message: `Cannot verify payment for an order in status '${order.status}'` });
   }
 
   // The only step that actually proves payment happened: recompute the
@@ -100,10 +102,9 @@ const verifyPayment = asyncHandler(async (req, res) => {
     .digest('hex');
 
   if (expectedSignature !== razorpay_signature) {
-    order.status = 'cancelled';
     order.payment.status = 'failed';
+    order.payment.attemptCount = (order.payment.attemptCount || 0) + 1;
     order.payment.lastAttemptAt = new Date();
-    await rollbackStock(order.stockDecremented);
     await order.save();
     return res.status(400).json({ success: false, message: 'Payment verification failed' });
   }

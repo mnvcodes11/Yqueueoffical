@@ -1,32 +1,24 @@
-const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
 const asyncHandler = require('../utils/asyncHandler');
+const { forgotPassword, verifyOtp, resetPassword } = require('./passwordResetController');
 
-// @desc    Register a new student (or admin, if role is explicitly passed)
+// @desc    Register a new student
 // @route   POST /api/auth/signup
 // @access  Public
 const signup = asyncHandler(async (req, res) => {
-  
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
-  }
-
-  const { name, email, password, role } = req.body;
+  const { name, email, password } = req.body;
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     return res.status(409).json({ success: false, message: 'An account with this email already exists' });
   }
 
-  // Only allow 'admin' role creation if explicitly intended - in production this
-  // should be gated behind an invite code or created via a seed script.
   const user = await User.create({
     name,
     email,
     password,
-    role: role === 'admin' ? 'admin' : 'student',
+    role: 'student',
   });
 
   const token = generateToken(user._id, user.role);
@@ -43,12 +35,6 @@ const signup = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const login = asyncHandler(async (req, res) => {
-  console.log("LOGIN REQUEST:", req.body);
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
-  }
-
   const { email, password, role } = req.body;
 
   const user = await User.findOne({ email }).select('+password');
@@ -127,4 +113,4 @@ const getWorkers = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, count: workers.length, workers });
 });
 
-module.exports = { signup, login, getMe, createWorker, getWorkers };
+module.exports = { signup, login, getMe, createWorker, getWorkers, forgotPassword, verifyOtp, resetPassword };

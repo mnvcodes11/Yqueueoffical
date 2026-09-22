@@ -29,6 +29,35 @@ const userSchema = new mongoose.Schema(
       enum: ['student', 'admin', 'worker'],
       default: 'student',
     },
+    otpHash: {
+      type: String,
+      select: false,
+    },
+    otpExpiry: {
+      type: Date,
+      select: false,
+    },
+    otpAttempts: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
+    otpCreatedAt: {
+      type: Date,
+      select: false,
+    },
+    resetSessionHash: {
+      type: String,
+      select: false,
+    },
+    resetSessionExpiry: {
+      type: Date,
+      select: false,
+    },
+    passwordChangedAt: {
+      type: Date,
+      select: false,
+    },
   },
   { timestamps: true }
 );
@@ -38,6 +67,13 @@ userSchema.pre('save', async function hashPassword(next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+// Track when a password change occurs to invalidate existing JWTs
+userSchema.pre('save', function trackPasswordChange(next) {
+  if (!this.isModified('password') || this.isNew) return next();
+  this.passwordChangedAt = Date.now();
   next();
 });
 
