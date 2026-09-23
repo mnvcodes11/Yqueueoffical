@@ -115,6 +115,10 @@ const orderIdParamValidation = [
   param('id').trim().notEmpty().isMongoId().withMessage('Order ID must be a valid MongoDB ID'),
 ];
 
+const qrOrderIdParamValidation = [
+  param('orderId').trim().notEmpty().isMongoId().withMessage('Order ID must be a valid MongoDB ID'),
+];
+
 const orderCheckoutValidation = [
   body('cartId').optional().trim().isMongoId().withMessage('cartId must be a valid MongoDB ID'),
 ];
@@ -204,6 +208,7 @@ module.exports = {
   cartAddValidation,
   cartUpdateValidation,
   orderIdParamValidation,
+  qrOrderIdParamValidation,
   orderCheckoutValidation,
   orderStatusValidation,
   kitchenOrderStatusValidation,

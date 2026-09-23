@@ -53,6 +53,9 @@ const OrderDetail = () => {
     const handleUpdate = (updatedOrder) => {
       if (updatedOrder._id !== id) return;
       setOrder(updatedOrder);
+      if (updatedOrder.status === 'ready') {
+        loadQr(updatedOrder);
+      }
       if (updatedOrder.status === 'ready' || updatedOrder.status === 'collected') {
         toast(updatedOrder.status === 'ready' ? 'Your order is ready for pickup!' : 'Order collected.', { icon: '🔔' });
       }
