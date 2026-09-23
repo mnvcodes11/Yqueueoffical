@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
-const { sendOtpEmail, sendPasswordResetSuccessEmail, safeSmtpErrorDetails } = require('../utils/emailService');
+const { sendOtpEmail, sendPasswordResetSuccessEmail, safeEmailErrorDetails } = require('../utils/emailService');
 const { logPasswordEvent } = require('../utils/auditLogger');
 const { hashValue, hashesMatch, generateOtp, generateResetToken } = require('../utils/passwordResetCrypto');
 
@@ -63,7 +63,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     user.otpAttempts = 0;
     user.otpCreatedAt = undefined;
     await user.save({ validateBeforeSave: false });
-    console.error('[SMTP-DIAGNOSTIC] OTP delivery failed', safeSmtpErrorDetails(error));
+    console.error('[EMAIL-DIAGNOSTIC] OTP delivery failed', safeEmailErrorDetails(error));
     await logPasswordEvent({ userId: user._id, email: normalizedEmail, event: 'otp_email_failed', ip: req.ip });
   }
 

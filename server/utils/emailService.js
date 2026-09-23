@@ -1,62 +1,54 @@
-const nodemailer = require('nodemailer');
-
-const safeSmtpErrorDetails = (error) => {
-  const configuredSecrets = [process.env.SMTP_PASS, process.env.JWT_SECRET].filter(Boolean);
+const safeEmailErrorDetails = (error) => {
+  const configuredSecrets = [process.env.RESEND_API_KEY, process.env.JWT_SECRET].filter(Boolean);
   const redact = (value) => configuredSecrets.reduce(
     (result, secret) => result.split(secret).join('[REDACTED]'),
     String(value || '')
   );
-  const command = String(error?.command || '');
-  const safeCommand = /^(EHLO|HELO|MAIL|RCPT|DATA|QUIT|STARTTLS|AUTH)$/i.test(command) ? command : undefined;
 
   return {
     name: error?.name || 'Error',
     code: error?.code || 'UNKNOWN',
     responseCode: error?.responseCode || undefined,
-    command: safeCommand,
-    message: redact(error?.message || 'SMTP operation failed'),
+    message: redact(error?.message || 'Email API request failed'),
   };
 };
 
-const getTransporter = async () => {
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT || 587);
-  const secure = String(process.env.SMTP_SECURE).toLowerCase() === 'true';
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const isTestTransport = !host || !user || !pass;
-
-  if (host && user && pass) {
-    return { transporter: nodemailer.createTransport({
-      host,
-      port,
-      secure,
-      auth: {
-        user,
-        pass,
-      },
-    }), isTestTransport };
-  }
-
-  if (process.env.NODE_ENV === 'production' || process.env.EMAIL_ALLOW_TEST_TRANSPORT !== 'true') {
-    const error = new Error('SMTP configuration is required');
-    error.code = 'SMTP_CONFIG_MISSING';
+const sendEmail = async ({ to, subject, html }) => {
+  if (!process.env.RESEND_API_KEY || !process.env.RESEND_FROM) {
+    const error = new Error('Resend email configuration is required');
+    error.code = 'RESEND_CONFIG_MISSING';
     throw error;
   }
 
-  const testAccount = await nodemailer.createTestAccount();
-  return {
-    transporter: nodemailer.createTransport({
-      host: testAccount.smtp.host,
-      port: testAccount.smtp.port,
-      secure: testAccount.smtp.secure,
-      auth: {
-        user: testAccount.user,
-        pass: testAccount.pass,
-      },
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: process.env.RESEND_FROM,
+      to: [to],
+      subject,
+      html,
     }),
-    isTestTransport,
-  };
+  });
+
+  if (!response.ok) {
+    let providerMessage = `Resend returned HTTP ${response.status}`;
+    try {
+      const body = await response.json();
+      if (body?.message) providerMessage = body.message;
+    } catch {
+      // Preserve the HTTP status when the provider does not return JSON.
+    }
+    const error = new Error(providerMessage);
+    error.code = 'RESEND_API_ERROR';
+    error.responseCode = response.status;
+    throw error;
+  }
+
+  return response.json();
 };
 
 const buildOtpEmailHtml = ({ name, otp, expiresIn }) => {
@@ -153,18 +145,6 @@ const buildResetConfirmationHtml = ({ name }) => {
 </html>`;
 };
 
-const sendEmail = async ({ to, subject, html }) => {
-  const { transporter } = await getTransporter();
-  const info = await transporter.sendMail({
-    from: process.env.SMTP_FROM || process.env.EMAIL_FROM || 'YQueue <no-reply@yqueue.app>',
-    to,
-    subject,
-    html,
-  });
-
-  return info;
-};
-
 const sendOtpEmail = async (user, otp) => {
   const html = buildOtpEmailHtml({ name: user.name || 'YQueue User', otp, expiresIn: 10 });
   await sendEmail({
@@ -183,4 +163,4 @@ const sendPasswordResetSuccessEmail = async (user) => {
   });
 };
 
-module.exports = { sendOtpEmail, sendPasswordResetSuccessEmail, safeSmtpErrorDetails };
+module.exports = { sendOtpEmail, sendPasswordResetSuccessEmail, safeEmailErrorDetails };
